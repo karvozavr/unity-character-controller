@@ -13,6 +13,7 @@ public class RigidbodySphereController : MonoBehaviour
     float maxAcceleration = 10f;
 
     Vector3 velocity;
+    Vector3 desiredVelocity;
 
     void Awake()
     {
@@ -25,8 +26,11 @@ public class RigidbodySphereController : MonoBehaviour
         playerInput.x = Input.GetAxis("Horizontal");
         playerInput.y = Input.GetAxis("Vertical");
         playerInput = Vector2.ClampMagnitude(playerInput, 1.0f);
-        
-        Vector3 desiredVelocity = new Vector3(playerInput.x, 0f, playerInput.y) * maxSpeed;
+
+        desiredVelocity = new Vector3(playerInput.x, 0f, playerInput.y) * maxSpeed;
+    }
+    void FixedUpdate() 
+    {
         AdjustVelocity(desiredVelocity);
     }
 
