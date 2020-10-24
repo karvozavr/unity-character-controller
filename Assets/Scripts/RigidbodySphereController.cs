@@ -51,15 +51,24 @@ public class RigidbodySphereController : MonoBehaviour
         onTheGround = false;
     }
 
-    void OnCollisionEnter()
+    void OnCollisionEnter(Collision collision)
     {
-        onTheGround = true;
+        EvaluateCollision(collision);
     }
     
-    void OnCollisionStay () {
-        onTheGround = true;
+    void OnCollisionStay (Collision collision) {
+        EvaluateCollision(collision);
     }
 
+    private void EvaluateCollision(Collision collision)
+    {
+        foreach (var contactPoint in collision.contacts)
+        {
+            Vector3 normal = contactPoint.normal;
+            onTheGround |= normal.y >= 0.9f;
+        }
+    }
+    
     private void Jump()
     {
         if (onTheGround)
