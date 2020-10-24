@@ -19,7 +19,7 @@ public class RigidbodySphereController : MonoBehaviour
         body = GetComponent<Rigidbody>();
     }
 
-    void Update() 
+    void Update()
     {
         Vector2 playerInput;
         playerInput.x = Input.GetAxis("Horizontal");
