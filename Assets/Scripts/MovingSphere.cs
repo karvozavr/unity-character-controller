@@ -8,6 +8,7 @@ public class MovingSphere : MonoBehaviour {
         Vector2 playerInput;
         playerInput.x = Input.GetAxis("Horizontal");
         playerInput.y = Input.GetAxis("Vertical");
+        playerInput.Normalize();
         transform.localPosition = new Vector3(playerInput.x, 0.5f, playerInput.y);
     }
 }
