@@ -12,8 +12,16 @@ public class RigidbodySphereController : MonoBehaviour
     [SerializeField, Range(0f, 100f)]
     float maxAcceleration = 10f;
 
-    Vector3 velocity;
-    Vector3 desiredVelocity;
+    [SerializeField, Range(0f, 10f)] 
+    float jumpHeight = 2f;
+
+    private Vector3 velocity;
+    
+    private Vector3 desiredVelocity;
+
+    private bool desiredJump;
+
+    private bool onTheGround;
 
     void Awake()
     {
@@ -26,17 +34,42 @@ public class RigidbodySphereController : MonoBehaviour
         playerInput.x = Input.GetAxis("Horizontal");
         playerInput.y = Input.GetAxis("Vertical");
         playerInput = Vector2.ClampMagnitude(playerInput, 1.0f);
-
         desiredVelocity = new Vector3(playerInput.x, 0f, playerInput.y) * maxSpeed;
+
+        desiredJump |= Input.GetButtonDown("Jump");
     }
     void FixedUpdate() 
     {
+        velocity = body.velocity;
+        if (desiredJump)
+        {
+            desiredJump = false;
+            Jump();
+        }
         AdjustVelocity(desiredVelocity);
+        
+        onTheGround = false;
     }
 
+    void OnCollisionEnter()
+    {
+        onTheGround = true;
+    }
+    
+    void OnCollisionStay () {
+        onTheGround = true;
+    }
+
+    private void Jump()
+    {
+        if (onTheGround)
+        {
+            velocity.y += Mathf.Sqrt(-2f * Physics.gravity.y * jumpHeight);
+        }
+    }
+    
     private void AdjustVelocity(Vector3 desiredVelocity)
     {
-        velocity = body.velocity;
         float maxSpeedChange = maxAcceleration * Time.deltaTime;
         velocity.x = Mathf.MoveTowards(velocity.x, desiredVelocity.x, maxSpeedChange);
         velocity.z = Mathf.MoveTowards(velocity.z, desiredVelocity.z, maxSpeedChange);
