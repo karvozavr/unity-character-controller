@@ -42,7 +42,7 @@ public class RigidbodySphereController : MonoBehaviour
         _desiredJump |= Input.GetButtonDown("Jump");
     }
 
-    void FixedUpdate()
+    private void FixedUpdate()
     {
         UpdateState();
         if (_desiredJump)
@@ -56,12 +56,12 @@ public class RigidbodySphereController : MonoBehaviour
         _onTheGround = false;
     }
 
-    void OnCollisionEnter(Collision collision)
+    private void OnCollisionEnter(Collision collision)
     {
         EvaluateCollision(collision);
     }
 
-    void OnCollisionStay(Collision collision)
+    private void OnCollisionStay(Collision collision)
     {
         EvaluateCollision(collision);
     }
