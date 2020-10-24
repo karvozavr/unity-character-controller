@@ -32,26 +32,35 @@ public class MovingSphere : MonoBehaviour {
         
         Vector3 displacement = velocity * Time.deltaTime;
         Vector3 newPosition = transform.localPosition + displacement;
+        newPosition = processBoundsCollision(newPosition);
 
+        transform.localPosition = newPosition;
+    }
+
+    private Vector3 processBoundsCollision(Vector3 newPosition)
+    {
         if (newPosition.x < allowedArea.xMin)
         {
             newPosition.x = allowedArea.xMin;
             velocity.x = -velocity.x * bounciness;
-        } else if (newPosition.x > allowedArea.xMax)
+        }
+        else if (newPosition.x > allowedArea.xMax)
         {
             newPosition.x = allowedArea.xMax;
             velocity.x = -velocity.x * bounciness;
         }
+
         if (newPosition.z < allowedArea.yMin)
         {
             newPosition.z = allowedArea.yMin;
             velocity.z = -velocity.z * bounciness;
-        } else if (newPosition.z > allowedArea.yMax)
+        }
+        else if (newPosition.z > allowedArea.yMax)
         {
             newPosition.z = allowedArea.yMax;
             velocity.z = -velocity.z * bounciness;
         }
 
-        transform.localPosition = newPosition;
+        return newPosition;
     }
 }
