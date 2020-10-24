@@ -6,20 +6,28 @@ public class RigidbodySphereController : MonoBehaviour
 {
     private Rigidbody body;
 
-    [SerializeField, Range(0f, 100f)]
+    [SerializeField, Range(0f, 100f)] 
     float maxSpeed = 10f;
 
-    [SerializeField, Range(0f, 100f)]
+    [SerializeField, Range(0f, 100f)] 
     float maxAcceleration = 10f;
+    
+    [SerializeField, Range(0f, 100f)] 
+    float maxAirAcceleration = 1f;
 
     [SerializeField, Range(0f, 10f)] 
     float jumpHeight = 2f;
 
+    [SerializeField, Range(0, 5)] 
+    int maxAirJumps = 0;
+
     private Vector3 velocity;
-    
+
     private Vector3 desiredVelocity;
 
     private bool desiredJump;
+
+    private int jumpPhase;
 
     private bool onTheGround;
 
@@ -38,16 +46,18 @@ public class RigidbodySphereController : MonoBehaviour
 
         desiredJump |= Input.GetButtonDown("Jump");
     }
-    void FixedUpdate() 
+
+    void FixedUpdate()
     {
-        velocity = body.velocity;
+        UpdateState();
         if (desiredJump)
         {
             desiredJump = false;
             Jump();
         }
+
         AdjustVelocity(desiredVelocity);
-        
+
         onTheGround = false;
     }
 
@@ -55,8 +65,9 @@ public class RigidbodySphereController : MonoBehaviour
     {
         EvaluateCollision(collision);
     }
-    
-    void OnCollisionStay (Collision collision) {
+
+    void OnCollisionStay(Collision collision)
+    {
         EvaluateCollision(collision);
     }
 
@@ -68,17 +79,33 @@ public class RigidbodySphereController : MonoBehaviour
             onTheGround |= normal.y >= 0.9f;
         }
     }
-    
+
     private void Jump()
     {
+        if (onTheGround || jumpPhase < maxAirJumps)
+        {
+            jumpPhase += 1;
+            float jumpSpeed = Mathf.Sqrt(-2f * Physics.gravity.y * jumpHeight);
+            if (velocity.y > 0)
+            {
+                jumpSpeed = Mathf.Max(jumpSpeed - velocity.y, 0f);
+            }
+            velocity.y += jumpSpeed;
+        }
+    }
+
+    private void UpdateState()
+    {
+        velocity = body.velocity;
         if (onTheGround)
         {
-            velocity.y += Mathf.Sqrt(-2f * Physics.gravity.y * jumpHeight);
+            jumpPhase = 0;
         }
     }
     
     private void AdjustVelocity(Vector3 desiredVelocity)
     {
+        float acceleration = onTheGround ? maxAcceleration : maxAirAcceleration;
         float maxSpeedChange = maxAcceleration * Time.deltaTime;
         velocity.x = Mathf.MoveTowards(velocity.x, desiredVelocity.x, maxSpeedChange);
         velocity.z = Mathf.MoveTowards(velocity.z, desiredVelocity.z, maxSpeedChange);
