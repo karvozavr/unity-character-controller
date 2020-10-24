@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class RigidbodySphereController : MonoBehaviour 
+public class RigidbodySphereController : MonoBehaviour
 {
+    private Rigidbody body;
 
     [SerializeField, Range(0f, 100f)]
     float maxSpeed = 10f;
@@ -13,6 +14,11 @@ public class RigidbodySphereController : MonoBehaviour
 
     Vector3 velocity;
 
+    void Awake()
+    {
+        body = GetComponent<Rigidbody>();
+    }
+
     void Update() 
     {
         Vector2 playerInput;
@@ -21,14 +27,15 @@ public class RigidbodySphereController : MonoBehaviour
         playerInput = Vector2.ClampMagnitude(playerInput, 1.0f);
         
         Vector3 desiredVelocity = new Vector3(playerInput.x, 0f, playerInput.y) * maxSpeed;
-        
+        AdjustVelocity(desiredVelocity);
+    }
+
+    private void AdjustVelocity(Vector3 desiredVelocity)
+    {
+        velocity = body.velocity;
         float maxSpeedChange = maxAcceleration * Time.deltaTime;
         velocity.x = Mathf.MoveTowards(velocity.x, desiredVelocity.x, maxSpeedChange);
         velocity.z = Mathf.MoveTowards(velocity.z, desiredVelocity.z, maxSpeedChange);
-        
-        Vector3 displacement = velocity * Time.deltaTime;
-        Vector3 newPosition = transform.localPosition + displacement;
-
-        transform.localPosition = newPosition;
+        body.velocity = velocity;
     }
 }
