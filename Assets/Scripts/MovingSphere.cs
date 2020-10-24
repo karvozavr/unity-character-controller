@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MovingSphere : MonoBehaviour {
+public class MovingSphere : MonoBehaviour 
+{
 
     [SerializeField]
     Rect allowedArea = new Rect(-5f, -5f, 10f,10f);
@@ -18,7 +19,8 @@ public class MovingSphere : MonoBehaviour {
     
     Vector3 velocity;
 
-    void Update() {
+    void Update() 
+    {
         Vector2 playerInput;
         playerInput.x = Input.GetAxis("Horizontal");
         playerInput.y = Input.GetAxis("Vertical");
@@ -37,7 +39,7 @@ public class MovingSphere : MonoBehaviour {
         transform.localPosition = newPosition;
     }
 
-    private Vector3 processBoundsCollision(Vector3 newPosition)
+    private Vector3 processBoundsCollision(Vector3 newPosition) 
     {
         if (newPosition.x < allowedArea.xMin)
         {
