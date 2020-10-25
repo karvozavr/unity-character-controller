@@ -1,20 +1,20 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class RigidbodySphereController : MonoBehaviour
 {
     private Rigidbody _body;
 
-    [SerializeField, Range(0f, 100f)] float maxSpeed = 10f;
+    [SerializeField, Range(0f, 100f)] private float maxSpeed = 10f;
 
-    [SerializeField, Range(0f, 100f)] float maxAcceleration = 10f;
+    [SerializeField, Range(0f, 100f)] private float maxAcceleration = 10f;
 
-    [SerializeField, Range(0f, 100f)] float maxAirAcceleration = 1f;
+    [SerializeField, Range(0f, 100f)] private float maxAirAcceleration = 1f;
 
-    [SerializeField, Range(0f, 10f)] float jumpHeight = 2f;
+    [SerializeField, Range(0f, 10f)] private float jumpHeight = 2f;
 
-    [SerializeField, Range(0, 5)] int maxAirJumps = 0;
+    [SerializeField, Range(0, 5)] private int maxAirJumps = 0;
+
+    [SerializeField, Range(0f, 90f)] private float maxGroundAngle = 25f;
 
     private Vector3 _velocity;
 
@@ -26,9 +26,19 @@ public class RigidbodySphereController : MonoBehaviour
 
     private bool _onTheGround;
 
+    private float _minGroundDotProduct;
+
+    private Vector3 _contactNormal;
+
     private void Awake()
     {
         _body = GetComponent<Rigidbody>();
+        OnValidate();
+    }
+
+    private void OnValidate()
+    {
+        _minGroundDotProduct = Mathf.Cos(maxGroundAngle * Mathf.Deg2Rad);
     }
 
     private void Update()
@@ -71,7 +81,11 @@ public class RigidbodySphereController : MonoBehaviour
         foreach (var contactPoint in collision.contacts)
         {
             Vector3 normal = contactPoint.normal;
-            _onTheGround |= normal.y >= 0.9f;
+            if (normal.y >= _minGroundDotProduct)
+            {
+                _onTheGround = true;
+                _contactNormal = normal;
+            }
         }
     }
 
@@ -81,12 +95,13 @@ public class RigidbodySphereController : MonoBehaviour
         {
             _jumpPhase += 1;
             float jumpSpeed = Mathf.Sqrt(-2f * Physics.gravity.y * jumpHeight);
-            if (_velocity.y > 0)
+            float alignedSpeed = Vector3.Dot(_velocity, _contactNormal);
+            if (alignedSpeed > 0)
             {
-                jumpSpeed = Mathf.Max(jumpSpeed - _velocity.y, 0f);
+                jumpSpeed = Mathf.Max(jumpSpeed - alignedSpeed, 0f);
             }
 
-            _velocity.y += jumpSpeed;
+            _velocity += _contactNormal * jumpSpeed;
         }
     }
 
@@ -97,12 +112,16 @@ public class RigidbodySphereController : MonoBehaviour
         {
             _jumpPhase = 0;
         }
+        else
+        {
+            _contactNormal = Vector3.up;
+        }
     }
 
     private void AdjustVelocity(Vector3 desiredVelocity)
     {
         float acceleration = _onTheGround ? maxAcceleration : maxAirAcceleration;
-        float maxSpeedChange = maxAcceleration * Time.deltaTime;
+        float maxSpeedChange = acceleration * Time.deltaTime;
         _velocity.x = Mathf.MoveTowards(_velocity.x, desiredVelocity.x, maxSpeedChange);
         _velocity.z = Mathf.MoveTowards(_velocity.z, desiredVelocity.z, maxSpeedChange);
         _body.velocity = _velocity;
