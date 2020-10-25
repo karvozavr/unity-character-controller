@@ -29,11 +29,14 @@ public class RigidbodySphereController : MonoBehaviour
     private Vector3 _contactNormal;
 
     private int _groundContactsCount;
+    
+    private Renderer _renderer;
 
     private bool OnGround => _groundContactsCount > 0;
 
     private void Awake()
     {
+        _renderer = GetComponent<Renderer>();
         _body = GetComponent<Rigidbody>();
         OnValidate();
     }
@@ -66,6 +69,7 @@ public class RigidbodySphereController : MonoBehaviour
         }
         
         _body.velocity = _velocity;
+        SetColorBasedOnContactCount();
         ClearState();
     }
 
@@ -156,5 +160,12 @@ public class RigidbodySphereController : MonoBehaviour
     private Vector3 ProjectOnContactPlane(Vector3 vector)
     {
         return vector - _contactNormal * Vector3.Dot(vector, _contactNormal);
+    }
+
+    private void SetColorBasedOnContactCount()
+    {
+        _renderer.material.SetColor(
+            "_Color", Color.white * (1 - _groundContactsCount * 0.25f)
+        );
     }
 }
