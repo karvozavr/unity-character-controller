@@ -24,11 +24,13 @@ public class RigidbodySphereController : MonoBehaviour
 
     private int _jumpPhase;
 
-    private bool _onTheGround;
-
     private float _minGroundDotProduct;
 
     private Vector3 _contactNormal;
+
+    private int _groundContactsCount;
+
+    private bool OnGround => _groundContactsCount > 0;
 
     private void Awake()
     {
@@ -55,15 +57,21 @@ public class RigidbodySphereController : MonoBehaviour
     private void FixedUpdate()
     {
         UpdateState();
+        AdjustVelocity();
+        
         if (_desiredJump)
         {
             _desiredJump = false;
             Jump();
         }
+        
+        _body.velocity = _velocity;
+        ClearState();
+    }
 
-        AdjustVelocity(_desiredVelocity);
-
-        _onTheGround = false;
+    private void ClearState () {
+        _groundContactsCount = 0;
+        _contactNormal = Vector3.zero;
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -83,15 +91,15 @@ public class RigidbodySphereController : MonoBehaviour
             Vector3 normal = contactPoint.normal;
             if (normal.y >= _minGroundDotProduct)
             {
-                _onTheGround = true;
-                _contactNormal = normal;
+                _groundContactsCount++;
+                _contactNormal += normal;
             }
         }
     }
 
     private void Jump()
     {
-        if (_onTheGround || _jumpPhase < maxAirJumps)
+        if (OnGround || _jumpPhase < maxAirJumps)
         {
             _jumpPhase += 1;
             float jumpSpeed = Mathf.Sqrt(-2f * Physics.gravity.y * jumpHeight);
@@ -108,9 +116,10 @@ public class RigidbodySphereController : MonoBehaviour
     private void UpdateState()
     {
         _velocity = _body.velocity;
-        if (_onTheGround)
+        if (OnGround)
         {
             _jumpPhase = 0;
+            _contactNormal.Normalize();
         }
         else
         {
@@ -118,12 +127,34 @@ public class RigidbodySphereController : MonoBehaviour
         }
     }
 
-    private void AdjustVelocity(Vector3 desiredVelocity)
+    private void GainDesiredVelocity(Vector3 desiredVelocity)
     {
-        float acceleration = _onTheGround ? maxAcceleration : maxAirAcceleration;
+        float acceleration = OnGround ? maxAcceleration : maxAirAcceleration;
         float maxSpeedChange = acceleration * Time.deltaTime;
         _velocity.x = Mathf.MoveTowards(_velocity.x, desiredVelocity.x, maxSpeedChange);
         _velocity.z = Mathf.MoveTowards(_velocity.z, desiredVelocity.z, maxSpeedChange);
         _body.velocity = _velocity;
+    }
+
+    private void AdjustVelocity()
+    {
+        Vector3 xAxis = ProjectOnContactPlane(Vector3.right).normalized;
+        Vector3 zAxis = ProjectOnContactPlane(Vector3.forward).normalized;
+
+        float currentX = Vector3.Dot(_velocity, xAxis);
+        float currentZ = Vector3.Dot(_velocity, zAxis);
+
+        float acceleration = OnGround ? maxAcceleration : maxAirAcceleration;
+        float maxSpeedChange = acceleration * Time.deltaTime;
+
+        float newX = Mathf.MoveTowards(currentX, _desiredVelocity.x, maxSpeedChange);
+        float newZ = Mathf.MoveTowards(currentZ, _desiredVelocity.z, maxSpeedChange);
+
+        _velocity += xAxis * (newX - currentX) + zAxis * (newZ - currentZ);
+    }
+
+    private Vector3 ProjectOnContactPlane(Vector3 vector)
+    {
+        return vector - _contactNormal * Vector3.Dot(vector, _contactNormal);
     }
 }
